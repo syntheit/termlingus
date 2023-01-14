@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(1 CXX)
+project(termlingus CXX)
 
 include(FetchContent)
 
@@ -17,9 +17,14 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 include_directories(include)
 
-add_executable(1 src/main.cpp src/ytdl.cpp src/gui.cpp)
+add_executable(termlingus src/main.cpp src/ytdl.cpp src/gui/gui.cpp)
 
-target_link_libraries(1 pthread)
+target_link_libraries(termlingus
+        PRIVATE ftxui::screen
+        PRIVATE ftxui::dom
+        PRIVATE ftxui::component # Not needed for this example.
+        PRIVATE pthread
+        )
 
 get_cmake_property(_variableNames VARIABLES)
 list (SORT _variableNames)
