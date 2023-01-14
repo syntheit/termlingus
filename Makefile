@@ -16,9 +16,9 @@ obj/jp2a/%.o: lib/jp2a/src/%.c
 	touch lib/jp2a/include/config.h
 	gcc $(CXXFLAGS) -c -o $@ $< -I lib/jp2a/include/ 
 
-obj/main.o: src/main.c
+obj/main.o: src/main.cpp
 	mkdir -p obj
-	g++ $(CXXFLAGS) -I include/ -I lib/jp2a/include/ -c -o obj/main.o src/main.c
+	g++ $(CXXFLAGS) -I include/ -I lib/jp2a/include/ -c -o obj/main.o src/main.cpp
 
 .PHONY: clean
 clean:
