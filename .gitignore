@@ -33,3 +33,6 @@
 
 # Built Output File
 termlingus
+
+# CMake build files
+build/
