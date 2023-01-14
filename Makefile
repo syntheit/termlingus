@@ -14,7 +14,7 @@ obj/ytdl.o: src/ytdl.cpp
 	mkdir -p obj
 	g++ -I include/ -c -o obj/ytdl.o src/ytdl.cpp $(CXXFLAGS)
 
-obj/main.o: src/main.cpp
+obj/main.o: src/main.cpp include/ThreadSafeQueue.hpp
 	mkdir -p obj
 	g++ -I include/ -c -o obj/main.o src/main.cpp $(CXXFLAGS)
 
