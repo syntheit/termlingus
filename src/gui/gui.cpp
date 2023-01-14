@@ -1,52 +1,205 @@
-//
-// Created by bertoc2 on 1/14/2023.
-//
-#include "gui.h"
+#include <cmath>                   // for sin, cos
+#include <ftxui/dom/elements.hpp>  // for canvas, Element, separator, hbox, operator|, border
+#include <ftxui/screen/screen.hpp>  // for Pixel
+#include <memory>   // for allocator, shared_ptr, __shared_ptr_access
+#include <string>   // for string, basic_string
+#include <utility>  // for move
+#include <vector>   // for vector, __alloc_traits<>::value_type
+#include <cstring>
+#include <cassert>
+#include <stdint.h>
+#include <fstream>
 
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/screen.hpp>
-#include <iostream>
+#include "ftxui/component/component.hpp"  // for Renderer, CatchEvent, Horizontal, Menu, Tab
+#include "ftxui/component/component_base.hpp"      // for ComponentBase
+#include "ftxui/component/event.hpp"               // for Event
+#include "ftxui/component/mouse.hpp"               // for Mouse
+#include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
+#include "ftxui/dom/canvas.hpp"                    // for Canvas
+#include "ftxui/screen/color.hpp"  // for Color, Color::Red, Color::Blue, Color::Green, ftxui
 
-int init_gui() {
-    using namespace ftxui;
+struct bmp_header {
+    uint16_t bmpSig;
+    uint32_t fSize;
+    uint16_t res0;
+    uint16_t res1;
+    uint32_t dataOff;
+}__attribute__((packed));
 
-    int saturation = 255;
-    Elements red_line;
-    Elements green_line;
-    Elements blue_line;
-    Elements cyan_line;
-    Elements magenta_line;
-    Elements yellow_line;
+struct bmp_info_header {
+    uint32_t size;
+    int32_t width;
+    int32_t height;
 
-    for (int value = 0; value < 255; value += 3) {
-        int v = value * value / 255;
-        red_line.push_back(text(" ") | bgcolor(Color::RGB(v, 0, 0)));
-        green_line.push_back(text(" ") | bgcolor(Color::RGB(0, v, 0)));
-        blue_line.push_back(text(" ") | bgcolor(Color::RGB(0, 0, v)));
-        cyan_line.push_back(text(" ") | bgcolor(Color::RGB(0, v, v)));
-        magenta_line.push_back(text(" ") | bgcolor(Color::RGB(v, 0, v)));
-        yellow_line.push_back(text(" ") | bgcolor(Color::RGB(v, v, 0)));
+    uint16_t planes;
+    uint16_t bitCount;
+    uint32_t compression;
+    uint32_t imageSize;
+    int32_t xPPM;
+    int32_t yPPM;
+    uint32_t colorsUsed;
+    uint32_t colorsImportant;
+}__attribute__((packed));
+
+struct bmp_color_header {
+    uint32_t redMask = 0x00ff0000;
+    uint32_t greenMask = 0x0000ff00;
+    uint32_t blueMask = 0x000000ff;
+    uint32_t alphaMask = 0xff000000;
+    uint32_t colorSpace = 0x73524742;
+    uint32_t unused[16]{ 0 };
+}__attribute__((packed));
+
+struct bmp {
+public:
+    bmp_header file_header;
+    bmp_info_header info_header;
+    bmp_color_header color_header;
+    std::vector<uint8_t> data;
+
+    ftxui::Color getPixel(uint32_t x, uint32_t y) {
+        uint32_t channels = info_header.bitCount / 8;
+
+        uint8_t b = data[channels * (y * info_header.width + x) + 0];
+        uint8_t g = data[channels * (y * info_header.width + x) + 1];
+        uint8_t r = data[channels * (y * info_header.width + x) + 2];
+
+        return ftxui::Color::RGB(r, g, b);
     }
 
-    auto document = vbox({
-                                 window(text("Primary colors"),
-                                        vbox({
-                                                     hbox({text("Red line    :"), hbox(std::move(red_line))}),
-                                                     hbox({text("Green line  :"), hbox(std::move(green_line))}),
-                                                     hbox({text("Blue line   :"), hbox(std::move(blue_line))}),
-                                             })),
-                                 window(text("Secondary colors"),
-                                        vbox({
-                                                     hbox({text("cyan line   :"), hbox(std::move(cyan_line))}),
-                                                     hbox({text("magenta line:"), hbox(std::move(magenta_line))}),
-                                                     hbox({text("Yellow line :"), hbox(std::move(yellow_line))}),
-                                             })),
-                         });
+    void read(const char *fname) {
+        std::ifstream inp{ fname, std::ios_base::binary };
+        if (inp) {
+            inp.read((char*)&file_header, sizeof(file_header));
+            if(file_header.bmpSig != 0x4D42) {
+                throw std::runtime_error("Error! Unrecognized file format.");
+            }
+            inp.read((char*)&info_header, sizeof(bmp_info_header));
 
-    auto screen = Screen::Create(Dimension::Full(), Dimension::Fit(document));
-    Render(screen, document);
+            // The BMPColorHeader is used only for transparent images
+            if(info_header.bitCount == 32) {
+                // Check if the file has bit mask color information
+                if(info_header.size >= (sizeof(bmp_info_header) + sizeof(bmp_color_header))) {
+                    inp.read((char*)&color_header, sizeof(bmp_color_header));
+                    // Check if the pixel data is stored as BGRA and if the color space type is sRGB
+                    check_color_header(color_header);
+                } else {
+                    std::cerr << "Warning! The file \"" << fname << "\" does not seem to contain bit mask information\n";
+                    throw std::runtime_error("Error! Unrecognized file format.");
+                }
+            }
 
-    screen.Print();
+            // Jump to the pixel data location
+            inp.seekg(file_header.dataOff, inp.beg);
+
+            // Adjust the header fields for output.
+            // Some editors will put extra info in the image file, we only save the headers and the data.
+            if(info_header.bitCount == 32) {
+                info_header.size = sizeof(bmp_info_header) + sizeof(bmp_color_header);
+                file_header.dataOff = sizeof(bmp_header) + sizeof(bmp_info_header) + sizeof(bmp_color_header);
+            } else {
+                info_header.size = sizeof(bmp_info_header);
+                file_header.dataOff = sizeof(bmp_header) + sizeof(bmp_info_header);
+            }
+            file_header.fSize = file_header.dataOff;
+
+            if (info_header.height < 0) {
+                throw std::runtime_error("The program can treat only BMP images with the origin in the bottom left corner!");
+            }
+
+            data.resize(info_header.width * info_header.height * info_header.bitCount / 8);
+
+            // Here we check if we need to take into account row padding
+            if (info_header.width % 4 == 0) {
+                inp.read((char*)data.data(), data.size());
+                file_header.fSize += data.size();
+            }
+            else {
+                row_stride = info_header.width * info_header.bitCount / 8;
+                uint32_t new_stride = make_stride_aligned(4);
+                std::vector<uint8_t> padding_row(new_stride - row_stride);
+
+                for (int y = 0; y < info_header.height; ++y) {
+                    inp.read((char*)(data.data() + row_stride * y), row_stride);
+                    inp.read((char*)padding_row.data(), padding_row.size());
+                }
+                file_header.fSize += data.size() + info_header.height * padding_row.size();
+            }
+        }
+        else {
+            throw std::runtime_error("Unable to open the input image file.");
+        }
+    }
+private:
+    uint32_t row_stride;
+
+    // Add 1 to the row_stride until it is divisible with align_stride
+    uint32_t make_stride_aligned(uint32_t align_stride) {
+        uint32_t new_stride = row_stride;
+        while (new_stride % align_stride != 0) {
+            new_stride++;
+        }
+        return new_stride;
+    }
+
+    void check_color_header(bmp_color_header &old_color_header) {
+        bmp_color_header expected_color_header;
+        if(expected_color_header.redMask != old_color_header.redMask ||
+            expected_color_header.blueMask != old_color_header.blueMask ||
+            expected_color_header.greenMask != old_color_header.greenMask ||
+            expected_color_header.alphaMask != old_color_header.alphaMask) {
+            throw std::runtime_error("Unexpected color mask format! The program expects the pixel data to be in the BGRA format");
+        }
+        if(expected_color_header.colorSpace != old_color_header.colorSpace) {
+            throw std::runtime_error("Unexpected color space type! The program expects sRGB values");
+        }
+    }
+}__attribute__((packed));
+
+
+
+int init_gui(std::string& str) {
+    using namespace ftxui;
+
+    int framerate = 60;
+    int frame = 1;
+
+    //assert(Terminal::ColorSupport() == Terminal::Color::TrueColor);
+    Terminal::SetColorSupport(Terminal::Color::TrueColor);
+
+    auto player = Renderer([&] {
+        auto c = Canvas(200, 200);
+        bmp img;
+        std::string num = std::string(3 - std::min(3, (int)std::to_string(frame).length()), '0') + std::to_string(frame);
+        img.read((std::string("images/yo") + num + std::string(".bmp")).c_str());
+        for (unsigned int i = 0; i < 200; i++) {
+            for (unsigned int j = 0; j < 113; j++) {
+                c.DrawBlock(i, 112 - j, true, img.getPixel(i, j));
+            }
+        }
+        return canvas(std::move(c));
+    });
+
+    auto screen = ScreenInteractive::FitComponent();
+
+    std::atomic<bool> refresh_ui_continue = true;
+    std::thread refresh_ui([&] {
+        while (refresh_ui_continue) {
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(1.0s / framerate);
+            // The |shift| variable belong to the main thread. `screen.Post(task)`
+            // will execute the update on the thread where |screen| lives (e.g. the
+            // main thread). Using `screen.Post(task)` is threadsafe.
+            screen.Post([&] { frame++; });
+            // After updating the state, request a new frame to be drawn. This is done
+            // by simulating a new "custom" event to be handled.
+            screen.Post(Event::Custom);
+        }
+    });
+
+    screen.Loop(player);
+    refresh_ui_continue = false;
+    refresh_ui.join();
 
     return 0;
 }
