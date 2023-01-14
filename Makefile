@@ -9,7 +9,7 @@ CXXFLAGS += -D PACKAGE_BUGREPORT="$(JP2A_PACKAGE_BUGREPORT)"
 CXXFLAGS += -D PACKAGE_URL="$(JP2A_PACKAGE_URL)"
 
 termlingus: obj/main.o $(JP2A_OBJS)
-	gcc -o termlingus obj/main.o $(JP2A_OBJS) -lcurl -ljpeg -lz -lncurses -lpng
+	g++ -o termlingus obj/main.o $(JP2A_OBJS) -lcurl -ljpeg -lz -lncurses -lpng
 
 obj/jp2a/%.o: lib/jp2a/src/%.c
 	mkdir -p obj/jp2a
@@ -18,7 +18,7 @@ obj/jp2a/%.o: lib/jp2a/src/%.c
 
 obj/main.o: src/main.c
 	mkdir -p obj
-	gcc $(CXXFLAGS) -I include/ -I lib/jp2a/include/ -c -o obj/main.o src/main.c
+	g++ $(CXXFLAGS) -I include/ -I lib/jp2a/include/ -c -o obj/main.o src/main.c
 
 .PHONY: clean
 clean:

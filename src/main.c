@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "image.h"
 
+// Workaround for compiling C into C++
+void decompress_jpeg(FILE *fin, FILE *fout, error_collector *errors) asm ("decompress_jpeg");
+
 extern int width, height;
 extern int invert;
 extern int colorfill, usecolors, colorDepth;
