@@ -1,0 +1,3 @@
+[submodule "lib/jp2a"]
+	path = lib/jp2a
+	url = git@github.com:cslarsen/jp2a.git
