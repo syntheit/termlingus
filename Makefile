@@ -1,4 +1,11 @@
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -pthread
+
+termlingus: obj/main.o obj/ytdl.o obj/gui.o
+	g++ -o termlingus obj/main.o obj/ytdl.o obj/gui.o -lncurses
+
+obj/gui.o: src/gui.cpp
+	mkdir -p obj
+	g++ -I include/ -c -o obj/gui.o src/gui.cpp $(CXXFLAGS)
 
 termlingus: obj/main.o obj/ytdl.o
 	g++ -o termlingus obj/main.o obj/ytdl.o $(CXXFLAGS)

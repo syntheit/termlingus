@@ -13,7 +13,7 @@ class ThreadSafeQueue {
 public:
     void push(T&& item) {
         {
-            std::lock_guard lock(mutex);
+            std::lock_guard<std::mutex> lock(mutex);
             queue.push(item);
         }
 
@@ -21,23 +21,23 @@ public:
     }
 
     T& front() {
-        std::unique_lock lock(mutex);
+        std::unique_lock<std::mutex> lock(mutex);
         cond_var.wait(lock, [&]{ return !queue.empty(); });
         return queue.front();
     }
 
     void pop() {
-        std::lock_guard lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
         queue.pop();
     }
 
 	bool empty() {
-		std::lock_guard lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		return queue.empty();
 	}
 
 	size_t size() {
-		std::lock_guard lock(mutex);
+		std::lock_guard<std::mutex> lock(mutex);
 		return queue.size();
 	}
 };

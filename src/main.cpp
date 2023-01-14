@@ -50,7 +50,7 @@ void displayImages() {
 		std::cout << "Goal Time: " << (frameNum * frameTime) << std::endl;
 
 		frameNum++;
-		
+
 		while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - startTime < (frameNum * frameTime)) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
@@ -60,7 +60,7 @@ void displayImages() {
 }
 
 void renderNow(const std::string& filename, const int first, const int last) {
-	raymii::Command::exec("ffmpeg -i " + filename + " -vf select='between(n\\," + std::to_string(first) + "\\," + std::to_string(last) + 
+	raymii::Command::exec("ffmpeg -i " + filename + " -vf select='between(n\\," + std::to_string(first) + "\\," + std::to_string(last) +
 		"),setpts=PTS-STARTPTS' -vsync 0 images/out%07d.jpg -hide_banner -loglevel error");
 
 	std::stringstream ss;
