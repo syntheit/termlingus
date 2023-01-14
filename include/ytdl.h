@@ -5,12 +5,10 @@
 #ifndef TERMLINGUS_YTDL_H
 #define TERMLINGUS_YTDL_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string>
 
-std::string load_video(const std::string& url);
+std::string load_video(const std::string &url);
 
-
-
-#endif //TERMLINGUS_YTDL_H
+#endif // TERMLINGUS_YTDL_H
