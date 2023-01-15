@@ -16,8 +16,8 @@ int new_socket = 0;
 int watch_client(char buffer[4096]) {
   while (true) {
     read(new_socket, buffer, 4096);
-    handle_client_action(buffer);
     std::cout << "Client did something" << std::endl;
+    handle_client_action(buffer);
     if (std::string(buffer) == std::string("exit"))
       break;
     for (int i = 0; i < 4096; ++i)

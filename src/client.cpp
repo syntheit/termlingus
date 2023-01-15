@@ -17,6 +17,7 @@ int watch_server(char buffer[4096]) {
   while (true) {
     read(sock, buffer, 4096);
     std::cout << "Server: " << buffer << "\n";
+    handle_server_data(buffer);
     if (std::string(buffer) == "exit")
       break;
     for (int i = 0; i < 4096; ++i)

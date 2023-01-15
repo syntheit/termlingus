@@ -78,3 +78,7 @@ int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
 void handle_client_action(char buffer[4096]) {
   std::cout << "Client action: " << buffer << std::endl;
 }
+
+void handle_server_data(char buffer[4096]) {
+  std::cout << "Server action: " << buffer << std::endl;
+}
