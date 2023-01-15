@@ -15,6 +15,8 @@
 #include <thread>
 #include <vector>
 #include <atomic>
+#include "bmp.h"
+#include <cassert>
 
 double round(double d) { return std::ceil(d * 100.0) / 100.0; }
 
@@ -128,36 +130,45 @@ void renderImages(const std::string &filename) {
 std::atomic<uint64_t> current_id = 0;
 
 int main(int argc, char **argv) {
-  std::map<std::string, std::string> flags;
-  std::vector<std::string> allArgs(argv, argv + argc);
-  for (unsigned int i = 0; i < allArgs.size(); ++i) {
-    std::string cur = allArgs.at(i);
-    // check to make sure the flag and commands are valid
-    if (cur[0] == '-')
-      flags.insert(std::pair<std::string, std::string>(
-          cur.substr(1, cur.size()),
-          i + 1 == allArgs.size() ? "" : allArgs.at(i + 1)));
-  }
-  std::string url = allArgs.size() > 1 ? allArgs.at(1) : "";
 
-  std::string video_name = "";
+  bmp img;
+  img.read("tb.bmp");
 
-  // check to make sure it's a youtube link
-  if (url != "") {
-    std::cout << "the URL is: " << url << std::endl;
-    video_name = load_video(url);
-  }
+  auto test = img.deserialize(img.serialize(), img.info_header.width, img.info_header.height);
 
-  totalFrameCount = getFrameCount("video.mp4");
-  frameRate = getFrameRate("video.mp4");
+  std::cout << test.size() << std::endl;
+  std::cout << img.data.size() << std::endl;
 
-  // Start the rendering thread
-  init_gui(video_name, totalFrameCount, frameRate);
-
-  std::thread audio_thread(raymii::Command::exec, "play stream.mp3");
-
-  // Preload the queue
-  while (queue.size() < 50) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-  }
+//  std::map<std::string, std::string> flags;
+//  std::vector<std::string> allArgs(argv, argv + argc);
+//  for (unsigned int i = 0; i < allArgs.size(); ++i) {
+//    std::string cur = allArgs.at(i);
+//    // check to make sure the flag and commands are valid
+//    if (cur[0] == '-')
+//      flags.insert(std::pair<std::string, std::string>(
+//          cur.substr(1, cur.size()),
+//          i + 1 == allArgs.size() ? "" : allArgs.at(i + 1)));
+//  }
+//  std::string url = allArgs.size() > 1 ? allArgs.at(1) : "";
+//
+//  std::string video_name = "";
+//
+//  // check to make sure it's a youtube link
+//  if (url != "") {
+//    std::cout << "the URL is: " << url << std::endl;
+//    video_name = load_video(url);
+//  }
+//
+//  totalFrameCount = getFrameCount("video.mp4");
+//  frameRate = getFrameRate("video.mp4");
+//
+//  // Start the rendering thread
+//  init_gui(video_name, totalFrameCount, frameRate);
+//
+//  std::thread audio_thread(raymii::Command::exec, "play stream.mp3");
+//
+//  // Preload the queue
+//  while (queue.size() < 50) {
+//    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//  }
 }
