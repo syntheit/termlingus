@@ -67,6 +67,8 @@ def most_popular_videos(max_results):
     encoding = webURL.info().get_content_charset('utf-8')
 
     results = json.loads(data.decode(encoding))
+    
+    resultStr = ""
 
     # download thumbnails
     for result in results['items']:
@@ -81,7 +83,12 @@ def most_popular_videos(max_results):
                 shutil.copyfileobj(r.raw, f)
         else:
             print('error downloading thumbnail')
-    return results
+            
+        resultStr += result['id'] + '\n'
+        resultStr += result['snippet']['title'] + '\n'
+        resultStr += result['snippet']['channelTitle'] + '\n'            
+            
+    return resultStr
 
 def get_comments(video_id, max_results):
     urlData = 'https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet&order=relevance&videoId=' + video_id + '&maxResults=' + str(max_results) + '&key=' + API_KEY
