@@ -1,43 +1,42 @@
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 #include <queue>
 
 // Thread-safe queue, allows for multiple threads to push and pop
 
-template <typename T>
-class ThreadSafeQueue {
-    std::mutex mutex;
-    std::condition_variable cond_var;
-    std::queue<T> queue;
+template <typename T> class ThreadSafeQueue {
+  std::mutex mutex;
+  std::condition_variable cond_var;
+  std::queue<T> queue;
 
 public:
-    void push(T&& item) {
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            queue.push(item);
-        }
-
-        cond_var.notify_one();
+  void push(T &&item) {
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      queue.push(item);
     }
 
-    T& front() {
-        std::unique_lock<std::mutex> lock(mutex);
-        cond_var.wait(lock, [&]{ return !queue.empty(); });
-        return queue.front();
-    }
+    cond_var.notify_one();
+  }
 
-    void pop() {
-        std::lock_guard<std::mutex> lock(mutex);
-        queue.pop();
-    }
+  T &front() {
+    std::unique_lock<std::mutex> lock(mutex);
+    cond_var.wait(lock, [&] { return !queue.empty(); });
+    return queue.front();
+  }
 
-	bool empty() {
-		std::lock_guard<std::mutex> lock(mutex);
-		return queue.empty();
-	}
+  void pop() {
+    std::lock_guard<std::mutex> lock(mutex);
+    queue.pop();
+  }
 
-	size_t size() {
-		std::lock_guard<std::mutex> lock(mutex);
-		return queue.size();
-	}
+  bool empty() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return queue.empty();
+  }
+
+  size_t size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return queue.size();
+  }
 };
