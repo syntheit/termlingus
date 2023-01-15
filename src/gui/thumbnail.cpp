@@ -11,11 +11,10 @@
 
 using namespace ftxui;
 
-Component Thumbnail(std::string& filepath) {
-
-  //system((std::string("ffmpeg -pix_fmt bgr24 -i \"") + filepath + std::string("\" tb.bmp")).c_str());
-
-  assert(false);
+Component Thumbnail(const std::string& filepath) {
+  system("rm -rf tb.bmp");
+  system((std::string("ffmpeg -pix_fmt bgr24 -i \"") + filepath +
+    std::string("\" tb.bmp -hide_banner -loglevel error")).c_str());
 
   return Renderer([&] {
     bmp img;

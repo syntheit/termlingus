@@ -12,6 +12,6 @@
 #include "ftxui/component/component_base.hpp"      // for ComponentBase
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 
-ftxui::Component Thumbnail(std::string& filepath);
+ftxui::Component Thumbnail(const std::string& filepath);
 
 #endif //TERMLINGUS_THUMBNAIL_H
