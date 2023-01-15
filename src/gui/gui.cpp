@@ -167,12 +167,16 @@ int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
         auto c = Canvas(200, 200);
         bmp img;
         std::string num = std::string(3 - std::min(3, (int)std::to_string(frame).length()), '0') + std::to_string(frame);
-        img.read((std::string("images/out") + num + std::string(".bmp")).c_str());
+        std::string filename = std::string("images/") + video_id + num + std::string(".bmp");
+        img.read(filename.c_str());
         for (unsigned int i = 0; i < 200; i++) {
             for (unsigned int j = 0; j < 113; j++) {
                 c.DrawBlock(i, 112 - j, true, img.getPixel(i, j));
             }
         }
+        assert (filename.size());
+        assert (filename.substr(0, 6) == std::string("images"));
+        system((std::string("rm ") + filename).c_str());
         return canvas(std::move(c));
     });
 
@@ -191,13 +195,15 @@ int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
             // by simulating a new "custom" event to be handled.
             screen.Post(Event::Custom);
 
-            if (frame > frame_count) refresh_ui_continue = false;
+            if (frame >= frame_count) refresh_ui_continue = false;
         }
     });
 
     screen.Loop(player);
     refresh_ui_continue = false;
     refresh_ui.join();
+
+    system((std::string("rm images/") + video_id + std::string("*.bmp")).c_str());
 
     return 0;
 }
