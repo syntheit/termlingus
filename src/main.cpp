@@ -39,12 +39,16 @@ int getFrameCount(const std::string &filename) {
 
 int getFrameRate(const std::string &filename) {
   std::string output = raymii::Command::exec(
-      "ffprobe -v error -select_streams v:0 -show_entries \
+                           "ffprobe -v error -select_streams v:0 -show_entries \
 		stream=r_frame_rate -of csv=s=x:p=0 " +
-      filename)
-      .output;
-  std::string token = output.substr(0, output.find("/"));
-  return std::stoi(token);
+                           filename)
+                           .output;
+  int slash = output.find("/");
+  std::string first = output.substr(0, slash);
+  std::string second = output.substr(slash + 1, output.length());
+  int result =
+      slash == -1 ? std::stoi(first) : (std::stoi(first) / std::stoi(second));
+  return result;
 }
 
 int main(int argc, char **argv) {
@@ -62,10 +66,8 @@ int main(int argc, char **argv) {
   std::string url = allArgs.size() > 1 ? allArgs.at(1) : "";
 
   // check to make sure it's a youtube link
-  if (url != "") {
-    std::cout << "the URL is: " << url << std::endl;
+  if (url != "")
     video_name = load_video(url);
-  }
 
   totalFrameCount = getFrameCount("video.mp4");
   frameRate = getFrameRate("video.mp4");
@@ -79,8 +81,8 @@ int main(int argc, char **argv) {
     client_init(server_ip);
   }
 
+  std::thread audio_thread(raymii::Command::exec, "play stream.mp3");
+
   // Start the rendering thread
   init_gui(video_name, totalFrameCount, frameRate);
-
-  std::thread audio_thread(raymii::Command::exec, "play stream.mp3");
 }
