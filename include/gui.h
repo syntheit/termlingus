@@ -6,6 +6,6 @@
 #define INC_1_GUI_H
 #include <string>
 
-int init_gui(std::string& test);
+int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate);
 
 #endif //INC_1_GUI_H

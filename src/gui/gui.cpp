@@ -156,22 +156,18 @@ private:
     }
 }__attribute__((packed));
 
-
-
-int init_gui(std::string& str) {
+int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
     using namespace ftxui;
 
-    int framerate = 60;
-    int frame = 1;
+    uint64_t frame = 1;
 
-    //assert(Terminal::ColorSupport() == Terminal::Color::TrueColor);
     Terminal::SetColorSupport(Terminal::Color::TrueColor);
 
     auto player = Renderer([&] {
         auto c = Canvas(200, 200);
         bmp img;
         std::string num = std::string(3 - std::min(3, (int)std::to_string(frame).length()), '0') + std::to_string(frame);
-        img.read((std::string("images/yo") + num + std::string(".bmp")).c_str());
+        img.read((std::string("images/out") + num + std::string(".bmp")).c_str());
         for (unsigned int i = 0; i < 200; i++) {
             for (unsigned int j = 0; j < 113; j++) {
                 c.DrawBlock(i, 112 - j, true, img.getPixel(i, j));
@@ -194,6 +190,8 @@ int init_gui(std::string& str) {
             // After updating the state, request a new frame to be drawn. This is done
             // by simulating a new "custom" event to be handled.
             screen.Post(Event::Custom);
+
+            if (frame > frame_count) refresh_ui_continue = false;
         }
     });
 
