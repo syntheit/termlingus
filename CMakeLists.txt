@@ -20,10 +20,19 @@ include_directories(include)
 
 add_executable(termlingus src/main.cpp src/ytdl.cpp src/gui/gui.cpp src/gui/thumbnail.cpp src/bmp.cpp src/server.cpp src/client.cpp)
 
+add_executable(home src/home.cpp src/gui/thumbnail.cpp src/bmp.cpp)
+
 target_link_libraries(termlingus
     PRIVATE ftxui::screen
     PRIVATE ftxui::dom
     PRIVATE ftxui::component # Not needed for this example.
+    PRIVATE pthread
+)
+
+target_link_libraries(home
+    PRIVATE ftxui::screen
+    PRIVATE ftxui::dom
+    PRIVATE ftxui::component
     PRIVATE pthread
 )
 
