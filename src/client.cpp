@@ -1,3 +1,4 @@
+#include "client.h"
 #include "gui.h"
 #include <arpa/inet.h>
 #include <cstring>
