@@ -6,7 +6,7 @@
 
 std::vector<uint8_t> bmp::deserialize(std::vector<bmp_packet> packets, uint16_t width, uint16_t height) {
   std::vector<uint8_t> newData = std::vector<uint8_t>(width * height * 3);
-  for (uint32_t i = 0; i < width * height; i++) {
+  for (uint32_t i = 0; i < width * height * 3; i++) {
     data[i] = packets[i / 4096].data[i % 4096];
   }
 
