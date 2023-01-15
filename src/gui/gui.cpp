@@ -18,6 +18,8 @@
 #include "ftxui/dom/canvas.hpp"                    // for Canvas
 #include "ftxui/screen/color.hpp"  // for Color, Color::Red, Color::Blue, Color::Green, ftxui
 
+#include "bmp.h"
+
 int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
     using namespace ftxui;
 
