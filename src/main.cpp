@@ -1,6 +1,7 @@
 #include "ThreadSafeQueue.hpp"
 #include "command.h"
 #include "ytdl.h"
+#include "gui.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -13,6 +14,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 double round(double d) { return std::ceil(d * 100.0) / 100.0; }
 
@@ -123,6 +125,8 @@ void renderImages(const std::string &filename) {
   }
 }
 
+std::atomic<uint64_t> current_id = 0;
+
 int main(int argc, char **argv) {
   std::map<std::string, std::string> flags;
   std::vector<std::string> allArgs(argv, argv + argc);
@@ -136,17 +140,19 @@ int main(int argc, char **argv) {
   }
   std::string url = allArgs.size() > 1 ? allArgs.at(1) : "";
 
+  std::string video_name = "";
+
   // check to make sure it's a youtube link
   if (url != "") {
     std::cout << "the URL is: " << url << std::endl;
-    load_video(url);
+    video_name = load_video(url);
   }
 
-  totalFrameCount = getFrameCount(video_name);
-  frameRate = getFrameRate(video_name);
+  totalFrameCount = getFrameCount("video.mp4");
+  frameRate = getFrameRate("video.mp4");
 
   // Start the rendering thread
-  std::thread t1(renderImages, video_name);
+  init_gui(video_name, totalFrameCount, frameRate);
 
   std::thread audio_thread(raymii::Command::exec, "play stream.mp3");
 
@@ -154,7 +160,4 @@ int main(int argc, char **argv) {
   while (queue.size() < 50) {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
-
-  displayImages();
-  t1.join();
 }
