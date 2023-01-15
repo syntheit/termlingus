@@ -1,6 +1,4 @@
 #include <cmath>                   // for sin, cos
-#include <ftxui/dom/elements.hpp>  // for canvas, Element, separator, hbox, operator|, border
-#include <ftxui/screen/screen.hpp>  // for Pixel
 #include <memory>   // for allocator, shared_ptr, __shared_ptr_access
 #include <string>   // for string, basic_string
 #include <utility>  // for move
@@ -17,31 +15,31 @@
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 #include "ftxui/dom/canvas.hpp"                    // for Canvas
 #include "ftxui/screen/color.hpp"  // for Color, Color::Red, Color::Blue, Color::Green, ftxui
+#include "ftxui/dom/elements.hpp"  // for canvas, Element, separator, hbox, operator|, border
+#include "ftxui/screen/screen.hpp"  // for Pixel
 
 #include "bmp.h"
+#include "thumbnail.h"
 
 int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
     using namespace ftxui;
 
-    uint64_t frame = 1;
+    std::atomic<uint64_t> frame = 1;
 
     Terminal::SetColorSupport(Terminal::Color::TrueColor);
 
-    auto player = Renderer([&] {
-        auto c = Canvas(200, 200);
-        bmp img;
-        std::string num = std::string(3 - std::min(3, (int)std::to_string(frame).length()), '0') + std::to_string(frame);
-        std::string filename = std::string("images/") + video_id + num + std::string(".bmp");
-        img.read(filename.c_str());
-        for (unsigned int i = 0; i < 200; i++) {
-            for (unsigned int j = 0; j < 113; j++) {
-                c.DrawBlock(i, 112 - j, true, img.getPixel(i, j));
-            }
+    Component player = Renderer([&] {
+      bmp img;
+      std::string num = std::string(3 - std::min(3, (int)std::to_string(frame).length()), '0') + std::to_string(frame);
+      std::string filename = std::string("images/") + video_id + num + std::string(".bmp");
+      img.read(filename.c_str());
+      auto c = Canvas(img.info_header.width, img.info_header.height);
+      for (unsigned int i = 0; i < img.info_header.width; i++) {
+        for (unsigned int j = 0; j < img.info_header.height; j++) {
+          c.DrawBlock(i, img.info_header.height - 1 - j, true, img.getPixel(i, j));
         }
-        assert (filename.size());
-        assert (filename.substr(0, 6) == std::string("images"));
-        system((std::string("rm ") + filename).c_str());
-        return canvas(std::move(c));
+      }
+      return canvas(std::move(c));
     });
 
     auto screen = ScreenInteractive::FitComponent();
