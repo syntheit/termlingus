@@ -131,6 +131,18 @@ std::atomic<uint64_t> current_id = 0;
 
 int main(int argc, char **argv) {
 
+  bmp img;
+  img.read("tb.bmp");
+
+  auto test = img.deserialize(img.serialize(), img.info_header.width, img.info_header.height);
+
+  std::cout << test.size() << std::endl;
+  std::cout << img.data.size() << std::endl;
+
+  for (uint32_t i = 0; i < test.size(); i++) {
+    std::cout << test[i] << "   " << img.data[i] << std::endl;
+  }
+
   std::map<std::string, std::string> flags;
   std::vector<std::string> allArgs(argv, argv + argc);
   for (unsigned int i = 0; i < allArgs.size(); ++i) {
