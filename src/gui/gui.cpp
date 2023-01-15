@@ -24,11 +24,10 @@
 int init_gui(std::string video_id, uint64_t frame_count, uint16_t framerate) {
   using namespace ftxui;
 
-  std::atomic<uint64_t> frame = 1;
+  uint64_t frame = 1;
 
   Terminal::SetColorSupport(Terminal::Color::TrueColor);
 
-  std::cout << "\ngot here\n";
   Component player = Renderer([&] {
     bmp img;
     std::string num =

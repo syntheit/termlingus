@@ -27,19 +27,27 @@ int totalFrameCount = 0, frameRate = 0;
 double secondsElapsed = 0, videoLength = 0;
 std::string video_name = "video.mp4";
 
+int getFrameCount(const std::string &filename) {
+  std::string output =
+      raymii::Command::exec(
+          "ffprobe -v error -count_frames -select_streams v:0 -show_entries \
+		stream=nb_read_frames -of default=nokey=1:noprint_wrappers=1 " +
+          filename)
+          .output;
+  return std::stoi(output);
+}
+
+int getFrameRate(const std::string &filename) {
+  std::string output = raymii::Command::exec(
+      "ffprobe -v error -select_streams v:0 -show_entries \
+		stream=r_frame_rate -of csv=s=x:p=0 " +
+      filename)
+      .output;
+  std::string token = output.substr(0, output.find("/"));
+  return std::stoi(token);
+}
+
 int main(int argc, char **argv) {
-
-  bmp img;
-  img.read("tb.bmp");
-
-  auto test = img.deserialize(img.serialize(), img.info_header.width, img.info_header.height);
-
-  std::cout << test.size() << std::endl;
-  std::cout << img.data.size() << std::endl;
-
-  for (uint32_t i = 0; i < test.size(); i++) {
-    std::cout << test[i] << "   " << img.data[i] << std::endl;
-  }
 
   std::map<std::string, std::string> flags;
   std::vector<std::string> allArgs(argv, argv + argc);
@@ -58,6 +66,9 @@ int main(int argc, char **argv) {
     std::cout << "the URL is: " << url << std::endl;
     video_name = load_video(url);
   }
+
+  totalFrameCount = getFrameCount("video.mp4");
+  frameRate = getFrameRate("video.mp4");
 
   if (flags.count("s") == 1) {
     server_init();

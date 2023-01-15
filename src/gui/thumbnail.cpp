@@ -15,7 +15,7 @@ Component Thumbnail(std::string& filepath) {
 
   //system((std::string("ffmpeg -pix_fmt bgr24 -i \"") + filepath + std::string("\" tb.bmp")).c_str());
 
-  //assert(false);
+  assert(false);
 
   return Renderer([&] {
     bmp img;
